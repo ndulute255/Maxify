@@ -8,40 +8,60 @@
 </head>
 <body>
     <header>
-        <div class="logo">MNo-Secure <span>NTA Level 6 Proj</span></div>
-        <div class="status-pill">System Status: Active</div>
+        <div class="logo">MNo-Secure <span>NTA Level 6 Final Project</span></div>
+        <div class="status-pill">Evaluation Engine: Active</div>
     </header>
 
     <main class="dashboard">
         <!-- Controls Side -->
         <section class="control-panel">
             <h2>Transaction Simulator</h2>
-            <p class="subtitle">Stream live synthetic transactions against detection models.</p>
+            <p class="subtitle">Stream live network traffic to measure ML model performance metrics.</p>
             
             <div class="btn-group">
                 <button id="btn-start" class="btn btn-primary">Start Live Feed</button>
                 <button id="btn-stop" class="btn btn-danger" disabled>Pause Feed</button>
-                <button id="btn-inject" class="btn btn-warning">Inject Fraud Spike</button>
+            </div>
+
+            <div class="attack-deck">
+                <h3>Manual Vector Injection Deck</h3>
+                <button class="btn btn-warn inject-btn" data-vector="SIM_SWAP">Inject SIM Swap Takeover</button>
+                <button class="btn btn-warn inject-btn" data-vector="MULE_RING">Inject Ring Layering (Mule)</button>
+                <button class="btn btn-warn inject-btn" data-vector="AIRTIME_EXPLOIT">Inject Airtime-to-Wallet Drain</button>
             </div>
 
             <div class="current-tx-card">
                 <h3>Live Transaction Inspector</h3>
-                <div class="data-row"><span>Sender:</span> <strong id="inspect-sender">-</strong></div>
+                <div class="data-row"><span>Sender ID:</span> <strong id="inspect-sender">-</strong></div>
                 <div class="data-row"><span>Amount:</span> <strong id="inspect-amount">-</strong></div>
-                <div class="data-row"><span>Device Status:</span> <strong id="inspect-device">-</strong></div>
-                <div class="data-row"><span>Velocity (1m):</span> <strong id="inspect-velocity">-</strong></div>
+                <div class="data-row"><span>IMSI State:</span> <strong id="inspect-device">-</strong></div>
+                <div class="data-row"><span>Channel Vector:</span> <strong id="inspect-vector">-</strong></div>
             </div>
         </section>
 
         <!-- Metrics & Logs Side -->
         <section class="analytics-panel">
+            <!-- ML Confusion Matrix & Performance Metrics Visualization -->
+            <div class="metrics-visualizer-grid">
+                <div class="metric-v-card">
+                    <h4>Random Forest Accuracy</h4>
+                    <div class="large-display-metric" id="stat-accuracy">0.0%</div>
+                    <div class="progress-bar-container"><div id="bar-accuracy" class="progress-fill"></div></div>
+                </div>
+                <div class="metric-v-card">
+                    <h4>Engine F1-Score</h4>
+                    <div class="large-display-metric" id="stat-f1">0.00</div>
+                    <div class="progress-bar-container"><div id="bar-f1" class="progress-fill highlight-bar"></div></div>
+                </div>
+            </div>
+
             <div class="model-comparison">
                 <!-- Halotel Legacy Rules Card -->
                 <div class="model-card rule-card">
-                    <h3>Halotel Baseline Rules</h3>
+                    <h3>Halotel Legacy Rules</h3>
                     <div class="metric"><span id="rule-verdict">CLEAR</span></div>
                     <p class="flag-reason" id="rule-reason">No anomalies flagged</p>
-                    <small>Logic: Hard Threshold Check</small>
+                    <small>Logic: Absolute Limits Check</small>
                 </div>
 
                 <!-- Random Forest Advanced Card -->
@@ -49,7 +69,7 @@
                     <h3>Random Forest Engine</h3>
                     <div class="metric"><span id="rf-score">0.00</span></div>
                     <p class="flag-reason" id="rf-verdict">LEGITIMATE</p>
-                    <small>Logic: Probabilistic Weighting</small>
+                    <small>Logic: Contextual Probabilities</small>
                 </div>
             </div>
 
@@ -57,11 +77,9 @@
             <div class="log-container">
                 <h3>Live Network Stream</h3>
                 <div class="log-header">
-                    <span>Timestamp</span><span>Sender</span><span>Amount</span><span>Actual State</span>
+                    <span>Timestamp</span><span>Sender MSISDN</span><span>Amount</span><span>Vector Target</span>
                 </div>
-                <div id="log-stream" class="log-stream">
-                    <!-- Dynamic logs enter here -->
-                </div>
+                <div id="log-stream" class="log-stream"></div>
             </div>
         </section>
     </main>

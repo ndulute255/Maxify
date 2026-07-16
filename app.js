@@ -1,86 +1,129 @@
-// --- Global Simulator Configuration State ---
+// --- Core Analytics Performance Matrix Tracker ---
+let matrix = { tp: 0, fp: 0, fn: 0, tn: 0 };
 let streamInterval = null;
-const logStream = document.getElementById('log-stream');
 
-// --- Feature Extraction Engine ---
-// Simulates extraction of parameters computed dynamically 
-function processTransaction(type = "LEGIT") {
+// --- Specialized Attack Vector Generator ---
+function extractNetworkPayload(forcedVector = null) {
     const prefixes = ['066', '062', '076', '071'];
     const sender = prefixes[Math.floor(Math.random() * prefixes.length)] + Math.floor(1000000 + Math.random() * 9000000);
     
-    let amount = Math.floor(Math.random() * 80000) + 2000; // Normal transactions (TZS 2,000 - 82,000)
-    let velocity = Math.floor(Math.random() * 2) + 1;       // Transactions in past 1 min
-    let newDevice = Math.random() > 0.9 ? 1 : 0;            // 10% chance new hardware
+    // Default Base Metrics (Legitimate Subsystem Operations)
+    let payload = {
+        sender: sender,
+        amount: Math.floor(Math.random() * 45000) + 5000, 
+        velocity: Math.floor(Math.random() * 2) + 1,       
+        simImsiChanged: 0,                                 
+        channel: "USSD_MENU",
+        groundTruth: "LEGIT"
+    };
 
-    if (type === "FRAUD") {
-        amount = Math.floor(Math.random() * 400000) + 150000; // Large, abnormal drain spikes
-        velocity = Math.floor(Math.random() * 5) + 4;         // Distinctly high velocity (4 to 8 transactions)
-        newDevice = 1;                                        // Forces account takeover simulation
+    const targetVector = forcedVector || (Math.random() > 0.85 ? ["SIM_SWAP", "MULE_RING", "AIRTIME_EXPLOIT"][Math.floor(Math.random()*3)] : "LEGIT");
+
+    if (targetVector === "SIM_SWAP") {
+        // Attack Pattern: Account takeover via sudden IMSI swap followed by full balance pull
+        payload.amount = Math.floor(Math.random() * 300000) + 150000; 
+        payload.velocity = 1; 
+        payload.simImsiChanged = 1; // Direct structural flag
+        payload.channel = "USSD_MENU";
+        payload.groundTruth = "FRAUD";
+    } 
+    else if (targetVector === "MULE_RING") {
+        // Attack Pattern: Structured layering using unusual channels (API/Web) with extreme transaction frequencies
+        payload.amount = Math.floor(Math.random() * 20000) + 5000; 
+        payload.velocity = Math.floor(Math.random() * 5) + 6; // High frequency burst
+        payload.simImsiChanged = 0;
+        payload.channel = "WEB_API_PORTAL";
+        payload.groundTruth = "FRAUD";
+    } 
+    else if (targetVector === "AIRTIME_EXPLOIT") {
+        // Attack Pattern: Draining small amounts repeatedly via airtime purchase systems to slide past baseline rules
+        payload.amount = Math.floor(Math.random() * 4000) + 1000; 
+        payload.velocity = Math.floor(Math.random() * 4) + 4; 
+        payload.simImsiChanged = 0;
+        payload.channel = "AIRTIME_VOUCHER";
+        payload.groundTruth = "FRAUD";
     }
 
-    return { sender, amount, velocity, newDevice, actual: type };
+    return payload;
 }
 
-// --- Model 1: Halotel Rule-Based Model Implementation ---
-// Mimics classical rule books: hard ceilings, no contextual nuance.
-function evaluateRuleModel(tx) {
-    if (tx.amount > 200000) {
-        return { action: "BLOCK", reason: "LIMIT_EXCEEDED" };
-    }
-    if (tx.velocity >= 4) {
-        return { action: "BLOCK", reason: "VELOCITY_BURST" };
-    }
-    return { action: "CLEAR", reason: "No anomalies flagged" };
+// --- Model 1: Legacy Rule-Based Model (Halotel Mockup) ---
+function runLegacyRules(tx) {
+    if (tx.amount > 200000) return { verdict: "BLOCK", reason: "MAX_LIMIT_LIMIT" };
+    if (tx.velocity >= 6) return { verdict: "BLOCK", reason: "VELOCITY_CEILING" };
+    return { verdict: "CLEAR", reason: "Passed Rule Book Checks" };
 }
 
-// --- Model 2: Ported Random Forest Engine ---
-// Evaluates multiple weak mathematical splits derived from Python matrix evaluations.
-function evaluateRandomForestModel(tx) {
-    let treesPassed = 0;
-    
-    // Tree 1 logic path
-    if (tx.amount > 120000 && tx.newDevice === 1) treesPassed += 1;
-    // Tree 2 logic path 
-    if (tx.velocity > 3) treesPassed += 1;
-    // Tree 3 logic path
-    if (tx.amount > 250000 || (tx.velocity > 2 && tx.newDevice === 1)) treesPassed += 1;
+// --- Model 2: Advanced Ported Random Forest Classifier ---
+function runRandomForest(tx) {
+    let internalVotingScore = 0;
 
-    const riskScore = treesPassed / 3; // Normalize output profile boundary (0.00 to 1.00)
+    // Estimator Tree 1: Targets account takeovers via device state changes
+    if (tx.simImsiChanged === 1 && tx.amount > 100000) internalVotingScore += 0.35;
+    // Estimator Tree 2: Targets integration channel frequency anomalies
+    if (tx.velocity > 4 && tx.channel === "WEB_API_PORTAL") internalVotingScore += 0.35;
+    // Estimator Tree 3: Tracks sneaky system airtime resource drains 
+    if (tx.velocity > 3 && tx.channel === "AIRTIME_VOUCHER") internalVotingScore += 0.30;
+
     return {
-        score: riskScore.toFixed(2),
-        verdict: riskScore >= 0.66 ? "FRAUDULENT" : "LEGITIMATE"
+        probability: internalVotingScore.toFixed(2),
+        prediction: internalVotingScore >= 0.35 ? "FRAUD" : "LEGIT"
     };
 }
 
-// --- UI Display Intermediary Pipelines ---
-function handleIncomingTx(tx) {
-    // 1. Update Inspector Panel Data
+// --- Real-Time Performance Analytics & Visualization Math Engine ---
+function updateConfusionMatrix(prediction, actual) {
+    if (prediction === "FRAUD" && actual === "FRAUD") matrix.tp++;
+    else if (prediction === "FRAUD" && actual === "LEGIT") matrix.fp++;
+    else if (prediction === "LEGIT" && actual === "FRAUD") matrix.fn++;
+    else if (prediction === "LEGIT" && actual === "LEGIT") matrix.tn++;
+
+    const total = matrix.tp + matrix.fp + matrix.fn + matrix.tn;
+    
+    // 1. Calculate Rolling Accuracy
+    const accuracy = total > 0 ? ((matrix.tp + matrix.tn) / total) * 100 : 0;
+    
+    // 2. Calculate Rolling Precision, Recall, and F1-Score
+    const precision = (matrix.tp + matrix.fp) > 0 ? matrix.tp / (matrix.tp + matrix.fp) : 0;
+    const recall = (matrix.tp + matrix.fn) > 0 ? matrix.tp / (matrix.tp + matrix.fn) : 0;
+    const f1Score = (precision + recall) > 0 ? 2 * ((precision * recall) / (precision + recall)) : 0;
+
+    // 3. Update Visual Displays & Progress Bars
+    document.getElementById('stat-accuracy').innerText = `${accuracy.toFixed(1)}%`;
+    document.getElementById('bar-accuracy').style.width = `${accuracy}%`;
+
+    document.getElementById('stat-f1').innerText = f1Score.toFixed(2);
+    document.getElementById('bar-f1').style.width = `${f1Score * 100}%`;
+}
+
+// --- Main Operational Pipeline ---
+function processIncomingData(tx) {
+    // Update live inspector card components
     document.getElementById('inspect-sender').innerText = tx.sender;
     document.getElementById('inspect-amount').innerText = `TZS ${tx.amount.toLocaleString()}`;
-    document.getElementById('inspect-device').innerText = tx.newDevice === 1 ? "New IMEI" : "Trusted";
-    document.getElementById('inspect-velocity').innerText = `${tx.velocity} tx/min`;
+    document.getElementById('inspect-device').innerText = tx.simImsiChanged === 1 ? "IMSI_SWAPPED" : "UNCHANGED";
+    document.getElementById('inspect-vector').innerText = tx.channel;
 
-    // 2. Compute Rule Model Verdict
-    const ruleResult = evaluateRuleModel(tx);
-    const rVerdictEl = document.getElementById('rule-verdict');
-    rVerdictEl.innerText = ruleResult.action;
-    document.getElementById('rule-reason').innerText = ruleResult.reason;
-    
-    if(ruleResult.action === "BLOCK") {
-        rVerdictEl.className = "status-danger";
-    } else {
-        rVerdictEl.className = "status-safe";
-    }
+    // Run evaluations
+    const legacy = runLegacyRules(tx);
+    const rf = runRandomForest(tx);
 
-    // 3. Compute Random Forest Decision Node Scoring
-    const rfResult = evaluateRandomForestModel(tx);
+    // Update Confusion Matrix against Random Forest outputs
+    updateConfusionMatrix(rf.prediction, tx.groundTruth);
+
+    // Render Legacy Rules Dashboard indicators
+    const legacyEl = document.getElementById('rule-verdict');
+    legacyEl.innerText = legacy.verdict;
+    document.getElementById('rule-reason').innerText = legacy.reason;
+    legacyEl.className = legacy.verdict === "BLOCK" ? "status-danger" : "status-safe";
+
+    // Render Random Forest Engine Dashboard indicators
     const rfScoreEl = document.getElementById('rf-score');
     const rfVerdictEl = document.getElementById('rf-verdict');
+    rfScoreEl.innerText = rf.probability;
+    rfVerdictEl.innerText = rf.prediction === "FRAUD" ? "FRAUDULENT" : "LEGITIMATE";
     
-    rfScoreEl.innerText = rfResult.score;
-    rfVerdictEl.innerText = rfResult.verdict;
-
-    if(rfResult.verdict === "FRAUDULENT") {
+    if (rf.prediction === "FRAUD") {
         rfScoreEl.className = "status-danger";
         rfVerdictEl.className = "status-danger";
     } else {
@@ -88,29 +131,26 @@ function handleIncomingTx(tx) {
         rfVerdictEl.className = "status-safe";
     }
 
-    // 4. Update the Stream Logs
-    const timestamp = new Date().toLocaleTimeString();
-    const logRow = document.createElement('div');
-    logRow.className = `log-row ${tx.actual === 'FRAUD' ? 'status-danger' : ''}`;
-    logRow.innerHTML = `
-        <span>${timestamp}</span>
+    // Append history ticker logs rows
+    const logStream = document.getElementById('log-stream');
+    const row = document.createElement('div');
+    row.className = `log-row ${tx.groundTruth === 'FRAUD' ? 'log-row-fraud' : ''}`;
+    row.innerHTML = `
+        <span>${new Date().toLocaleTimeString()}</span>
         <span>${tx.sender}</span>
-        <span>TZS ${tx.amount}</span>
-        <strong>${tx.actual}</strong>
+        <span class="${tx.groundTruth === 'FRAUD'?'status-danger':''}">TZS ${tx.amount}</span>
+        <strong class="${tx.groundTruth === 'FRAUD'?'status-danger':''}">${tx.groundTruth === 'FRAUD' ? tx.channel : 'NORMAL'}</strong>
     `;
-    logStream.insertBefore(logRow, logStream.firstChild);
+    logStream.insertBefore(row, logStream.firstChild);
 }
 
-// --- Event Orchestration Listeners ---
+// --- User Interaction Listeners ---
 document.getElementById('btn-start').addEventListener('click', () => {
     document.getElementById('btn-start').disabled = true;
     document.getElementById('btn-stop').disabled = false;
-    
     streamInterval = setInterval(() => {
-        // 90% legit background noise, 10% unexpected random organic spikes
-        const type = Math.random() > 0.90 ? "FRAUD" : "LEGIT";
-        handleIncomingTx(processTransaction(type));
-    }, 1500);
+        processIncomingData(extractNetworkPayload());
+    }, 1200);
 });
 
 document.getElementById('btn-stop').addEventListener('click', () => {
@@ -119,7 +159,9 @@ document.getElementById('btn-stop').addEventListener('click', () => {
     clearInterval(streamInterval);
 });
 
-document.getElementById('btn-inject').addEventListener('click', () => {
-    // Explicit manual execution bypass to test model sensitivity immediately
-    handleIncomingTx(processTransaction("FRAUD"));
+document.querySelectorAll('.inject-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const vector = e.target.getAttribute('data-vector');
+        processIncomingData(extractNetworkPayload(vector));
+    });
 });
