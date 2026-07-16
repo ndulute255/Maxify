@@ -168,7 +168,11 @@ def receiver():
 
 @app.route('/api/v1/account/<phone>')
 def api_account(phone):
+    # Normalize phone lookup: accept both +prefixed and plain numbers
     acct = query_account(phone)
+    if acct is None and not phone.startswith('+'):
+        acct = query_account('+' + phone)
+
     if acct is None:
         return jsonify({'error': 'account not found'}), 404
     return jsonify({'phone_number': acct['phone_number'], 'balance': acct['balance'], 'status': acct['status']})
