@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>M-Detect Dashboard</title>
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">M-Detect <span>Tanzania</span></div>
+      <nav>
+        <a class="active">Overview</a>
+        <a>Alerts Queue</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="title">Fraud Operations Overview</div>
+        <div class="meta">LIVE • All Systems Operational</div>
+      </header>
+
+      <section class="kpis">
+        <div class="card" id="card-total">
+          <div class="label">TOTAL MONITORED TRANSACTIONS</div>
+          <div class="value" id="total-trans">0</div>
+          <canvas id="spark-total"></canvas>
+        </div>
+        <div class="card" id="card-alerts">
+          <div class="label">ACTIVE FRAUD ALERTS</div>
+          <div class="value" id="active-alerts">0</div>
+        </div>
+        <div class="card" id="card-blocked">
+          <div class="label">BLOCKED FRAUD VOLUME</div>
+          <div class="value" id="blocked-volume">TZS 0.00M</div>
+        </div>
+        <div class="card" id="card-model">
+          <div class="label">MODEL PERFORMANCE</div>
+          <div class="value" id="model-performance">AUC-ROC 0.984 | RF F1: 95.1%</div>
+        </div>
+      </section>
+
+      <section class="alerts-queue">
+        <h3>Real-Time Alerts Queue</h3>
+        <div class="table-wrap">
+          <div class="table-header">
+            <div>Transaction ID</div>
+            <div>Timestamp</div>
+            <div>Sender ID</div>
+            <div>Receiver ID</div>
+            <div>Amount</div>
+            <div>Risk Score</div>
+            <div>Status</div>
+            <div>Action</div>
+          </div>
+          <div id="tx-body" class="table-body"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

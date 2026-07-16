@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sender - M-Detect</title>
+  <style>
+    body{background:#071022;color:#e6eef8;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+    .card{background:linear-gradient(180deg,#0b1220,#071022);padding:20px;border-radius:14px;width:360px;border:1px solid rgba(255,255,255,0.03)}
+    .field{margin-bottom:10px}
+    label{font-size:0.85rem;color:#9fb0c8}
+    input,select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#fff}
+    button{width:100%;padding:12px;border-radius:10px;background:linear-gradient(90deg,#7c3aed,#4f46e5);border:none;color:#fff;font-weight:700}
+    .modal{position:fixed;left:0;top:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5)}
+    .modal .inner{background:#071022;padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.04)}
+    .ok{background:linear-gradient(90deg,#10b981,#3ee6b0);padding:8px 12px;border-radius:8px;color:#031016}
+    .bad{background:linear-gradient(90deg,#ff4d6d,#ff6f8f);padding:8px 12px;border-radius:8px;color:#fff}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h3>Send Money</h3>
+    <div class="field"><label>Sender Phone</label><input id="sender" value="+255711000111"></div>
+    <div class="field"><label>Receiver Phone</label><input id="receiver" value="+255712000222"></div>
+    <div class="field"><label>Amount (TZS)</label><input id="amount" type="number" value="50000"></div>
+    <div class="field"><label>Device</label>
+      <select id="device">
+        <option value="DEV-A-111">Authorized Device</option>
+        <option value="UNKNOWN-999">Unknown / Mismatched Device</option>
+      </select>
+    </div>
+    <button id="sendBtn">Send</button>
+  </div>
+
+  <div id="modal" style="display:none" class="modal"><div class="inner" id="modalInner"></div></div>
+
+  <script>
+    document.getElementById('sendBtn').addEventListener('click', async ()=>{
+      const payload = {
+        sender_phone: document.getElementById('sender').value,
+        receiver_phone: document.getElementById('receiver').value,
+        amount: Number(document.getElementById('amount').value),
+        device_id: document.getElementById('device').value
+      };
+      const res = await fetch('/api/v1/transfer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const data = await res.json();
+      const modal = document.getElementById('modal');
+      const inner = document.getElementById('modalInner');
+      if(data.result === 'approved'){
+        inner.innerHTML = `<h4 style="color:#9ff7d0">Transfer Successful</h4><p>Risk Score: ${data.risk_score.toFixed(2)}%</p><button class='ok' onclick="closeModal()">OK</button>`;
+      } else if(data.result === 'blocked' || data.error){
+        inner.innerHTML = `<h4 style="color:#ff9fb0">Account Frozen due to Fraud Detection</h4><p>${data.reason || data.error}</p><button class='bad' onclick="closeModal()">Close</button>`;
+      }
+      modal.style.display='flex';
+    });
+    function closeModal(){document.getElementById('modal').style.display='none';}
+  </script>
+</body>
+</html>

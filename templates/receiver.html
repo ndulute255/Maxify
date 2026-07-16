@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Receiver - M-Detect</title>
+  <style>
+    body{background:#071022;color:#e6eef8;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+    .card{background:linear-gradient(180deg,#0b1220,#071022);padding:20px;border-radius:14px;width:360px;border:1px solid rgba(255,255,255,0.03)}
+    .bal{font-size:2rem;font-weight:800}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h3>Receiver Wallet</h3>
+    <div>Phone: <strong id="phone">{{ phone }}</strong></div>
+    <div style="margin-top:12px">Balance: <div class="bal" id="balance">TZS 0</div></div>
+  </div>
+
+  <script>
+    const phone = document.getElementById('phone').innerText;
+    async function fetchBal(){
+      const res = await fetch(`/api/v1/account/${phone}`);
+      const data = await res.json();
+      if(!data.error){
+        document.getElementById('balance').innerText = `TZS ${Number(data.balance).toLocaleString()}`;
+      }
+    }
+    fetchBal();setInterval(fetchBal,2000);
+  </script>
+</body>
+</html>
