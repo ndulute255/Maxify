@@ -34,14 +34,14 @@ def close_connection(exception):
 
 
 def init_db():
-        """Initialize the SQLite DB and seed test accounts if not present.
+    """Initialize the SQLite DB and seed test accounts if not present.
 
-        This routine creates two tables used by the system:
-            - `accounts`: stores user wallet metadata and balances
-            - `transactions`: stores transaction history and risk metadata
+    This routine creates two tables used by the system:
+      - `accounts`: stores user wallet metadata and balances
+      - `transactions`: stores transaction history and risk metadata
 
-        It also inserts three seeded Tanzanian test accounts used by the demo UI.
-        """
+    It also inserts three seeded Tanzanian test accounts used by the demo UI.
+    """
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
