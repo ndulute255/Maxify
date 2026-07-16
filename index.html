@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MNo Fraud Analytics Engine</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="logo">MNo-Secure <span>NTA Level 6 Proj</span></div>
+        <div class="status-pill">System Status: Active</div>
+    </header>
+
+    <main class="dashboard">
+        <!-- Controls Side -->
+        <section class="control-panel">
+            <h2>Transaction Simulator</h2>
+            <p class="subtitle">Stream live synthetic transactions against detection models.</p>
+            
+            <div class="btn-group">
+                <button id="btn-start" class="btn btn-primary">Start Live Feed</button>
+                <button id="btn-stop" class="btn btn-danger" disabled>Pause Feed</button>
+                <button id="btn-inject" class="btn btn-warning">Inject Fraud Spike</button>
+            </div>
+
+            <div class="current-tx-card">
+                <h3>Live Transaction Inspector</h3>
+                <div class="data-row"><span>Sender:</span> <strong id="inspect-sender">-</strong></div>
+                <div class="data-row"><span>Amount:</span> <strong id="inspect-amount">-</strong></div>
+                <div class="data-row"><span>Device Status:</span> <strong id="inspect-device">-</strong></div>
+                <div class="data-row"><span>Velocity (1m):</span> <strong id="inspect-velocity">-</strong></div>
+            </div>
+        </section>
+
+        <!-- Metrics & Logs Side -->
+        <section class="analytics-panel">
+            <div class="model-comparison">
+                <!-- Halotel Legacy Rules Card -->
+                <div class="model-card rule-card">
+                    <h3>Halotel Baseline Rules</h3>
+                    <div class="metric"><span id="rule-verdict">CLEAR</span></div>
+                    <p class="flag-reason" id="rule-reason">No anomalies flagged</p>
+                    <small>Logic: Hard Threshold Check</small>
+                </div>
+
+                <!-- Random Forest Advanced Card -->
+                <div class="model-card rf-card">
+                    <h3>Random Forest Engine</h3>
+                    <div class="metric"><span id="rf-score">0.00</span></div>
+                    <p class="flag-reason" id="rf-verdict">LEGITIMATE</p>
+                    <small>Logic: Probabilistic Weighting</small>
+                </div>
+            </div>
+
+            <!-- Live Stream Ticker Logs -->
+            <div class="log-container">
+                <h3>Live Network Stream</h3>
+                <div class="log-header">
+                    <span>Timestamp</span><span>Sender</span><span>Amount</span><span>Actual State</span>
+                </div>
+                <div id="log-stream" class="log-stream">
+                    <!-- Dynamic logs enter here -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
