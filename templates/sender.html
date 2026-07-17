@@ -4,16 +4,20 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Sender - M-Detect</title>
   <style>
-    body{background:#071022;color:#e6eef8;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
-    .card{background:linear-gradient(180deg,#0b1220,#071022);padding:20px;border-radius:14px;width:360px;border:1px solid rgba(255,255,255,0.03)}
+    body{background:#071022;color:#e6eef8;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:16px}
+    .card{background:linear-gradient(180deg,#0b1220,#071022);padding:20px;border-radius:14px;width:min(100%,360px);border:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(0,0,0,0.25)}
     .field{margin-bottom:10px}
     label{font-size:0.85rem;color:#9fb0c8}
     input,select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#fff}
-    button{width:100%;padding:12px;border-radius:10px;background:linear-gradient(90deg,#7c3aed,#4f46e5);border:none;color:#fff;font-weight:700}
-    .modal{position:fixed;left:0;top:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5)}
-    .modal .inner{background:#071022;padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.04)}
+    .action-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+    button{padding:12px;border-radius:10px;background:linear-gradient(90deg,#7c3aed,#4f46e5);border:none;color:#fff;font-weight:700;cursor:pointer;transition:transform .2s ease, opacity .2s ease}
+    button:hover{transform:translateY(-1px);opacity:.95}
+    .secondary{background:linear-gradient(90deg,#0ea5e9,#2563eb)}
+    .modal{position:fixed;left:0;top:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);padding:16px}
+    .modal .inner{background:#071022;padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);width:min(100%,320px)}
     .ok{background:linear-gradient(90deg,#10b981,#3ee6b0);padding:8px 12px;border-radius:8px;color:#031016}
     .bad{background:linear-gradient(90deg,#ff4d6d,#ff6f8f);padding:8px 12px;border-radius:8px;color:#fff}
+    @media (max-width:480px){.action-row{flex-direction:column}.action-row button{width:100%}}
   </style>
 </head>
 <body>
@@ -28,7 +32,10 @@
         <option value="UNKNOWN-999">Unknown / Mismatched Device</option>
       </select>
     </div>
-    <button id="sendBtn">Send</button>
+    <div class="action-row">
+      <button id="sendBtn" style="flex:1">Send</button>
+      <button id="resetBtn" class="secondary" type="button" style="flex:1">Reset Amount</button>
+    </div>
   </div>
 
   <div id="modal" style="display:none" class="modal"><div class="inner" id="modalInner"></div></div>
@@ -51,6 +58,9 @@
         inner.innerHTML = `<h4 style="color:#ff9fb0">Account Frozen due to Fraud Detection</h4><p>${data.reason || data.error}</p><button class='bad' onclick="closeModal()">Close</button>`;
       }
       modal.style.display='flex';
+    });
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      document.getElementById('amount').value = '50000';
     });
     function closeModal(){document.getElementById('modal').style.display='none';}
   </script>

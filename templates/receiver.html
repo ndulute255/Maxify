@@ -4,9 +4,14 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Receiver - M-Detect</title>
   <style>
-    body{background:#071022;color:#e6eef8;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
-    .card{background:linear-gradient(180deg,#0b1220,#071022);padding:20px;border-radius:14px;width:360px;border:1px solid rgba(255,255,255,0.03)}
+    body{background:#071022;color:#e6eef8;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:16px}
+    .card{background:linear-gradient(180deg,#0b1220,#071022);padding:20px;border-radius:14px;width:min(100%,360px);border:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(0,0,0,0.25)}
     .bal{font-size:2rem;font-weight:800}
+    .action-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+    button{padding:12px;border-radius:10px;background:linear-gradient(90deg,#7c3aed,#4f46e5);border:none;color:#fff;font-weight:700;cursor:pointer;transition:transform .2s ease, opacity .2s ease}
+    button:hover{transform:translateY(-1px);opacity:.95}
+    .secondary{background:linear-gradient(90deg,#0ea5e9,#2563eb)}
+    @media (max-width:480px){.action-row{flex-direction:column}.action-row button{width:100%}}
   </style>
 </head>
 <body>
@@ -14,6 +19,10 @@
     <h3>Receiver Wallet</h3>
     <div>Phone: <strong id="phone">{{ phone }}</strong></div>
     <div style="margin-top:12px">Balance: <div class="bal" id="balance">TZS 0</div></div>
+    <div class="action-row">
+      <button id="refreshBtn" type="button">Refresh Now</button>
+      <button id="resetBtn" class="secondary" type="button">Reset Amount</button>
+    </div>
   </div>
 
   <script>
@@ -25,6 +34,10 @@
         document.getElementById('balance').innerText = `TZS ${Number(data.balance).toLocaleString()}`;
       }
     }
+    document.getElementById('refreshBtn').addEventListener('click', fetchBal);
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      document.getElementById('balance').innerText = 'TZS 0';
+    });
     fetchBal();setInterval(fetchBal,2000);
   </script>
 </body>
