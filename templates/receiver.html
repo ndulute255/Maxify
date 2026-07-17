@@ -27,24 +27,33 @@
   <script>
     const phone = document.getElementById('phone').innerText;
     const balanceEl = document.getElementById('balance');
+    const card = document.querySelector('.card');
 
-    let hasReceivedTransfer = false;
+    let lastKnownBalance = 0;
 
     async function fetchBal(){
-      const res = await fetch(`/api/v1/account/${phone}`);
+      const res = await fetch(`/api/v1/get-balance/${phone}`);
       const data = await res.json();
-      if(!data.error && hasReceivedTransfer){
+      if(!data.error){
         const incomingBalance = Number(data.balance) || 0;
-        balanceEl.innerText = `TZS ${incomingBalance.toLocaleString()}`;
+        if (incomingBalance !== lastKnownBalance) {
+          lastKnownBalance = incomingBalance;
+          balanceEl.innerText = `TZS ${incomingBalance.toLocaleString()}`;
+          card.style.boxShadow = '0 0 0 2px rgba(16, 185, 129, 0.55), 0 10px 30px rgba(0,0,0,0.25)';
+          setTimeout(() => {
+            card.style.boxShadow = '0 10px 30px rgba(0,0,0,0.25)';
+          }, 700);
+        }
       }
     }
 
     document.getElementById('resetBtn').addEventListener('click', () => {
-      hasReceivedTransfer = false;
+      lastKnownBalance = 0;
       balanceEl.innerText = 'TZS 0';
     });
 
-    setInterval(fetchBal, 2000);
+    fetchBal();
+    setInterval(fetchBal, 1500);
   </script>
 </body>
 </html>

@@ -12,51 +12,49 @@ async function fetchMetrics(){
     activeAlerts.innerText = data.active_fraud_alerts;
     blockedVolume.innerText = `TZS ${(data.blocked_fraud_volume/1000000).toFixed(2)}M`;
 
-    // populate table
     txBody.innerHTML = '';
     data.recent_transactions.forEach(tx => {
       const row = document.createElement('div');
       row.className = 'tx-row';
       const riskPct = Math.min(100, Math.round(tx.risk_score || 0));
       const badgeClass = tx.prediction_label === 'CRITICAL' ? 'badge-critical' : (tx.prediction_label === 'MEDIUM RISK' ? 'badge-medium' : 'badge-low');
-      const isFrozen = tx.status === 'BLOCKED' || tx.prediction_label === 'CRITICAL';
+      const isBlocked = tx.status === 'BLOCKED' || tx.prediction_label === 'CRITICAL';
+      const statusText = tx.status || 'PENDING';
+      const badgeText = statusText === 'BLOCKED' ? 'BLOCKED' : tx.prediction_label;
+      const rowStateClass = tx.status === 'BLOCKED' ? 'tx-row-blocked' : '';
 
+      row.classList.add(rowStateClass);
       row.innerHTML = `
         <div>TXN_TZ_${tx.transaction_id}</div>
         <div>${new Date(tx.timestamp).toLocaleTimeString()}</div>
         <div>${tx.sender_id}</div>
         <div>${tx.receiver_id}</div>
-        <div>TZS ${tx.amount.toLocaleString()}</div>
+        <div>TZS ${Number(tx.amount).toLocaleString()}</div>
         <div>
           <div class="risk-meter"><div class="risk-fill" style="width:${riskPct}%"></div></div>
         </div>
-        <div><span class="${badgeClass}">${tx.prediction_label}</span></div>
+        <div><span class="${badgeClass}">${badgeText}</span></div>
         <div class="action-btns">
-          <button class="approve" onclick="performAction('approve', ${tx.transaction_id})">Approve</button>
-          ${isFrozen ? `<button class="unfreeze" onclick="performUnfreeze('${tx.sender_id}')">Unfreeze</button>` : `<button class="freeze" onclick="performFreeze('${tx.sender_id}')">Freeze Account</button>`}
+          <button class="approve" data-action="approve" data-tx-id="${tx.transaction_id}" data-sender="${tx.sender_id}">Approve</button>
+          ${isBlocked ? `<button class="unfreeze" data-action="unfreeze" data-sender="${tx.sender_id}">Unfreeze</button>` : `<button class="freeze" data-action="freeze" data-sender="${tx.sender_id}" data-tx-id="${tx.transaction_id}">Freeze Account</button>`}
         </div>
       `;
       txBody.appendChild(row);
     });
 
+    txBody.querySelectorAll('button[data-action]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const action = btn.getAttribute('data-action');
+        const txId = btn.getAttribute('data-tx-id');
+        const sender = btn.getAttribute('data-sender');
+        const payload = action === 'approve' ? { transaction_id: txId, sender_phone: sender } : { transaction_id: txId, phone: sender, sender_phone: sender };
+        await fetch(`/api/v1/action/${action}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        fetchMetrics();
+      });
+    });
   }catch(e){
     console.error('metrics fetch err', e);
   }
-}
-
-async function performAction(action, tx_id){
-  await fetch(`/api/v1/action/${action}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({transaction_id:tx_id})});
-  fetchMetrics();
-}
-
-async function performFreeze(phone){
-  await fetch(`/api/v1/action/freeze`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone})});
-  fetchMetrics();
-}
-
-async function performUnfreeze(phone){
-  await fetch(`/api/v1/action/unfreeze`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone})});
-  fetchMetrics();
 }
 
 fetchMetrics();

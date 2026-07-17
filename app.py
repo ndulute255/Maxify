@@ -11,6 +11,7 @@ DB_PATH = os.path.join(os.path.dirname(__file__), 'mobile_money.db')
 MODEL_PATH = os.path.join(os.path.dirname(__file__), 'random_forest_model.pkl')
 
 app = Flask(__name__)
+DEMO_PHONE_NUMBERS = {'+255711000111', '+255712000222', '+255713000333'}
 
 
 def get_db():
@@ -87,6 +88,8 @@ def init_db():
                 "INSERT INTO accounts (phone_number, user_name, balance, status, device_id, last_login_ip) VALUES (?, ?, ?, ?, ?, ?)",
                 (p, n, bal, status, did, ip)
             )
+
+    cur.execute("UPDATE accounts SET status = 'ACTIVE' WHERE phone_number IN ({})".format(','.join('?' for _ in DEMO_PHONE_NUMBERS)), tuple(DEMO_PHONE_NUMBERS))
 
     conn.commit()
     conn.close()
@@ -178,6 +181,16 @@ def api_account(phone):
     return jsonify({'phone_number': acct['phone_number'], 'balance': acct['balance'], 'status': acct['status']})
 
 
+@app.route('/api/v1/get-balance/<phone>')
+def api_get_balance(phone):
+    acct = query_account(phone)
+    if acct is None and not phone.startswith('+'):
+        acct = query_account('+' + phone)
+    if acct is None:
+        return jsonify({'error': 'account not found'}), 404
+    return jsonify({'phone_number': acct['phone_number'], 'balance': acct['balance'], 'status': acct['status']})
+
+
 @app.route('/api/v1/transfer', methods=['POST'])
 def api_transfer():
     data = request.get_json() or {}
@@ -200,9 +213,15 @@ def api_transfer():
 
     # Convert sqlite row to dict for easier access
     s = dict(s)
-    # Respect account status
+    # Respect account status, but allow the seeded demo accounts to be reactivated
+    # automatically so the demo flow remains usable after a prior freeze.
     if s['status'] == 'FROZEN':
-        return jsonify({'error': 'account frozen'}), 403
+        if sender_phone in DEMO_PHONE_NUMBERS:
+            cur.execute('UPDATE accounts SET status = ? WHERE phone_number = ?', ('ACTIVE', sender_phone))
+            db.commit()
+            s['status'] = 'ACTIVE'
+        else:
+            return jsonify({'error': 'account frozen'}), 403
 
     # Ensure sufficient funds
     if s['balance'] < amount:
@@ -249,7 +268,7 @@ def api_transfer():
                 (timestamp, sender_phone, receiver_phone, amount, risk_score, 'LOW RISK' if risk_score < 35 else 'MEDIUM RISK', 'APPROVED'))
     db.commit()
 
-    return jsonify({'result': 'approved', 'risk_score': risk_score, 'timestamp': timestamp}), 200
+    return jsonify({'result': 'approved', 'risk_score': risk_score, 'timestamp': timestamp, 'receiver_phone': receiver_phone}), 200
 
 
 @app.route('/api/v1/dashboard-metrics')
@@ -293,22 +312,28 @@ def api_action(action_type):
 
     if action_type == 'approve':
         tx_id = payload.get('transaction_id')
+        sender_phone = payload.get('sender_phone')
         if not tx_id:
             return jsonify({'error': 'transaction_id required'}), 400
         cur.execute('UPDATE transactions SET status = ? WHERE transaction_id = ?', ('APPROVED', tx_id))
+        if sender_phone:
+            cur.execute('UPDATE accounts SET status = ? WHERE phone_number = ?', ('ACTIVE', sender_phone))
         db.commit()
         return jsonify({'result': 'approved'})
 
     if action_type == 'freeze':
-        phone = payload.get('phone')
+        tx_id = payload.get('transaction_id')
+        phone = payload.get('phone') or payload.get('sender_phone')
         if not phone:
             return jsonify({'error': 'phone required'}), 400
+        if tx_id:
+            cur.execute('UPDATE transactions SET status = ? WHERE transaction_id = ?', ('BLOCKED', tx_id))
         cur.execute('UPDATE accounts SET status = ? WHERE phone_number = ?', ('FROZEN', phone))
         db.commit()
         return jsonify({'result': 'frozen'})
 
     if action_type == 'unfreeze':
-        phone = payload.get('phone')
+        phone = payload.get('phone') or payload.get('sender_phone')
         if not phone:
             return jsonify({'error': 'phone required'}), 400
         cur.execute('UPDATE accounts SET status = ? WHERE phone_number = ?', ('ACTIVE', phone))
