@@ -20,25 +20,31 @@
     <div>Phone: <strong id="phone">{{ phone }}</strong></div>
     <div style="margin-top:12px">Balance: <div class="bal" id="balance">TZS 0</div></div>
     <div class="action-row">
-      <button id="refreshBtn" type="button">Refresh Now</button>
       <button id="resetBtn" class="secondary" type="button">Reset Amount</button>
     </div>
   </div>
 
   <script>
     const phone = document.getElementById('phone').innerText;
+    const balanceEl = document.getElementById('balance');
+
+    let hasReceivedTransfer = false;
+
     async function fetchBal(){
       const res = await fetch(`/api/v1/account/${phone}`);
       const data = await res.json();
-      if(!data.error){
-        document.getElementById('balance').innerText = `TZS ${Number(data.balance).toLocaleString()}`;
+      if(!data.error && hasReceivedTransfer){
+        const incomingBalance = Number(data.balance) || 0;
+        balanceEl.innerText = `TZS ${incomingBalance.toLocaleString()}`;
       }
     }
-    document.getElementById('refreshBtn').addEventListener('click', fetchBal);
+
     document.getElementById('resetBtn').addEventListener('click', () => {
-      document.getElementById('balance').innerText = 'TZS 0';
+      hasReceivedTransfer = false;
+      balanceEl.innerText = 'TZS 0';
     });
-    fetchBal();setInterval(fetchBal,2000);
+
+    setInterval(fetchBal, 2000);
   </script>
 </body>
 </html>

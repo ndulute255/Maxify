@@ -307,6 +307,14 @@ def api_action(action_type):
         db.commit()
         return jsonify({'result': 'frozen'})
 
+    if action_type == 'unfreeze':
+        phone = payload.get('phone')
+        if not phone:
+            return jsonify({'error': 'phone required'}), 400
+        cur.execute('UPDATE accounts SET status = ? WHERE phone_number = ?', ('ACTIVE', phone))
+        db.commit()
+        return jsonify({'result': 'unfrozen'})
+
     return jsonify({'error': 'unknown action'}), 400
 
 

@@ -25,9 +25,11 @@ body{margin:0;background:var(--bg);color:#cbd5e1;font-family:Inter,Segoe UI,Robo
 .badge-critical{color:#fff;background:linear-gradient(90deg,var(--danger),#ff6f8f);padding:6px 8px;border-radius:18px;font-weight:700}
 .badge-medium{color:#111;background:linear-gradient(90deg,var(--warn),#ffd58a);padding:6px 8px;border-radius:18px;font-weight:700}
 .badge-low{color:#fff;background:linear-gradient(90deg,var(--good),#3ee6b0);padding:6px 8px;border-radius:18px;font-weight:700}
-.action-btns{display:flex;gap:8px}
-.approve{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6px 8px;border-radius:8px;color:#cbd5e1}
-.freeze{background:linear-gradient(90deg,#ff4d6d,#ff6f8f);border:none;color:#fff;padding:6px 8px;border-radius:8px}
+.action-btns{display:flex;gap:8px;flex-wrap:wrap}
+.approve{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6px 8px;border-radius:8px;color:#cbd5e1;cursor:pointer;min-width:90px}
+.freeze{background:linear-gradient(90deg,#ff4d6d,#ff6f8f);border:none;color:#fff;padding:6px 8px;border-radius:8px;cursor:pointer;min-width:110px}
+.unfreeze{background:linear-gradient(90deg,#10b981,#3ee6b0);border:none;color:#0b1220;padding:6px 8px;border-radius:8px;cursor:pointer;min-width:110px}
+@media (max-width:900px){.action-btns{flex-direction:column}.approve,.freeze,.unfreeze{width:100%}}
 
 .risk-meter{height:8px;background:rgba(255,255,255,0.03);border-radius:8px;overflow:hidden}
 .risk-fill{height:100%;background:linear-gradient(90deg,#10b981,#ffe66d);width:0%}

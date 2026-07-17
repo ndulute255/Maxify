@@ -19,6 +19,7 @@ async function fetchMetrics(){
       row.className = 'tx-row';
       const riskPct = Math.min(100, Math.round(tx.risk_score || 0));
       const badgeClass = tx.prediction_label === 'CRITICAL' ? 'badge-critical' : (tx.prediction_label === 'MEDIUM RISK' ? 'badge-medium' : 'badge-low');
+      const isFrozen = tx.status === 'BLOCKED' || tx.prediction_label === 'CRITICAL';
 
       row.innerHTML = `
         <div>TXN_TZ_${tx.transaction_id}</div>
@@ -32,7 +33,7 @@ async function fetchMetrics(){
         <div><span class="${badgeClass}">${tx.prediction_label}</span></div>
         <div class="action-btns">
           <button class="approve" onclick="performAction('approve', ${tx.transaction_id})">Approve</button>
-          <button class="freeze" onclick="performFreeze('${tx.sender_id}')">Freeze Account</button>
+          ${isFrozen ? `<button class="unfreeze" onclick="performUnfreeze('${tx.sender_id}')">Unfreeze</button>` : `<button class="freeze" onclick="performFreeze('${tx.sender_id}')">Freeze Account</button>`}
         </div>
       `;
       txBody.appendChild(row);
@@ -50,6 +51,11 @@ async function performAction(action, tx_id){
 
 async function performFreeze(phone){
   await fetch(`/api/v1/action/freeze`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone})});
+  fetchMetrics();
+}
+
+async function performUnfreeze(phone){
+  await fetch(`/api/v1/action/unfreeze`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone})});
   fetchMetrics();
 }
 
